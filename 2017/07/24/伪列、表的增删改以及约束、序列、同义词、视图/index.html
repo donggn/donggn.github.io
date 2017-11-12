@@ -1,0 +1,758 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="数据伪列ROWNUM对显示的数据进行自动的行号编号，操作如下 1SELECT ROWNUM FROM 表; 但是ROWNUM只能取出第一行的记录或者取出前N行的记录 12SELECT * FROM 表 WHERE ROWNUM=1;SELECT * FROM 表 WHERE ROWNUM&amp;lt;10; ROWNUM只能够使用基本的关系，不能够用BETWEEN..AND..这种关系，如果要查询第几行">
+<meta property="og:type" content="article">
+<meta property="og:title" content="伪列、表的增删改以及约束、序列、同义词、视图">
+<meta property="og:url" content="https://donggn.github.io/2017/07/24/伪列、表的增删改以及约束、序列、同义词、视图/index.html">
+<meta property="og:site_name" content="dongg">
+<meta property="og:description" content="数据伪列ROWNUM对显示的数据进行自动的行号编号，操作如下 1SELECT ROWNUM FROM 表; 但是ROWNUM只能取出第一行的记录或者取出前N行的记录 12SELECT * FROM 表 WHERE ROWNUM=1;SELECT * FROM 表 WHERE ROWNUM&amp;lt;10; ROWNUM只能够使用基本的关系，不能够用BETWEEN..AND..这种关系，如果要查询第几行">
+<meta property="og:updated_time" content="2017-11-12T14:16:13.914Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="伪列、表的增删改以及约束、序列、同义词、视图">
+<meta name="twitter:description" content="数据伪列ROWNUM对显示的数据进行自动的行号编号，操作如下 1SELECT ROWNUM FROM 表; 但是ROWNUM只能取出第一行的记录或者取出前N行的记录 12SELECT * FROM 表 WHERE ROWNUM=1;SELECT * FROM 表 WHERE ROWNUM&amp;lt;10; ROWNUM只能够使用基本的关系，不能够用BETWEEN..AND..这种关系，如果要查询第几行">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://donggn.github.io/2017/07/24/伪列、表的增删改以及约束、序列、同义词、视图/"/>
+
+
+
+
+
+  <title>伪列、表的增删改以及约束、序列、同义词、视图 | dongg</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">dongg</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://donggn.github.io/2017/07/24/伪列、表的增删改以及约束、序列、同义词、视图/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="dong">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/image/cat.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="dongg">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">伪列、表的增删改以及约束、序列、同义词、视图</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-24T11:37:16+08:00">
+                2017-07-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="数据伪列"><a href="#数据伪列" class="headerlink" title="数据伪列"></a>数据伪列</h2><h3 id="ROWNUM"><a href="#ROWNUM" class="headerlink" title="ROWNUM"></a>ROWNUM</h3><p>对显示的数据进行自动的行号编号，操作如下</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">SELECT</span> <span class="keyword">ROWNUM</span> <span class="keyword">FROM</span> 表;</div></pre></td></tr></table></figure>
+<p>但是ROWNUM只能取出第一行的记录或者取出前N行的记录</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> 表 <span class="keyword">WHERE</span> <span class="keyword">ROWNUM</span>=<span class="number">1</span>;</div><div class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> 表 <span class="keyword">WHERE</span> <span class="keyword">ROWNUM</span>&lt;<span class="number">10</span>;</div></pre></td></tr></table></figure>
+<p>ROWNUM只能够使用基本的关系，不能够用BETWEEN..AND..这种关系，如果要查询第几行到第几行的数据，比如查询第5行到第10行的数据</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">SELECT</span> *</div><div class="line"><span class="keyword">FROM</span> (<span class="keyword">SELECT</span> ... <span class="keyword">ROWNUM</span> RN <span class="keyword">FROM</span> 表 <span class="keyword">WHERE</span> <span class="keyword">ROWNUM</span>&lt;=<span class="number">10</span>) TEMP</div><div class="line"><span class="keyword">WHERE</span> TEMP.RN&gt;<span class="number">5</span>;</div></pre></td></tr></table></figure>
+<h3 id="ROWID"><a href="#ROWID" class="headerlink" title="ROWID"></a>ROWID</h3><p>ROWID可以用来描述一行记录的唯一编号，以后再详细介绍</p>
+<h2 id="表的创建与管理"><a href="#表的创建与管理" class="headerlink" title="表的创建与管理"></a>表的创建与管理</h2><p>表创建语法如下</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> 表名称(</div><div class="line">列名称 类型 [<span class="keyword">DEFAULT</span> 默认值],</div><div class="line">列名称 类型 [<span class="keyword">DEFAULT</span> 默认值]);</div></pre></td></tr></table></figure>
+<p>增加数据的语法</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> 表名称 (列名称<span class="number">1</span>,列名称<span class="number">2.</span>..) <span class="keyword">VALUES</span>(值<span class="number">1</span>,值<span class="number">2.</span>..);</div></pre></td></tr></table></figure>
+<p>更换表名语法</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">RENAME</span> 旧的表名称 <span class="keyword">TO</span> 新的表名称;</div></pre></td></tr></table></figure>
+<p>截断表的语法</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">TRUNCATE</span> <span class="keyword">TABLE</span> 表名称;</div></pre></td></tr></table></figure>
+<p>一旦表被截断之后，所占用的数据空间会被释放掉（上面的更换表名和截断表的语法oracle中才有）。</p>
+<p>表的删除</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">DROP</span> <span class="keyword">TABLE</span> 表名称;</div></pre></td></tr></table></figure>
+<h3 id="闪回（FLASH-BACK"><a href="#闪回（FLASH-BACK" class="headerlink" title="闪回（FLASH BACK)"></a>闪回（FLASH BACK)</h3><p>闪回技术与WINDOWS的回收站非常相似，在对数据表发出删除操作后，数据表会被保存在回收站中，并且为了标记出回收站被删除的数据表，会标记上“BIN**”</p>
+<p>通过这个语句查看回收站被删除的表</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> user_recyclebin;</div></pre></td></tr></table></figure>
+<p>通过下面这个语句恢复被删除的表</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">FLASHBACK TABLE 表名 TO BEFORE <span class="keyword">DROP</span>;</div></pre></td></tr></table></figure>
+<p>删除回收站里的表</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">PURGE</span> <span class="keyword">TABLE</span> 表名;</div></pre></td></tr></table></figure>
+<p>清空回收站</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">PURGE</span> RECYCLEBIN;</div></pre></td></tr></table></figure>
+<p>强制删除数据表不经过回收站</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">DROP</span> <span class="keyword">TABLE</span> 表名称 <span class="keyword">PURGE</span>;</div></pre></td></tr></table></figure>
+<h3 id="修改表结构"><a href="#修改表结构" class="headerlink" title="修改表结构"></a>修改表结构</h3><p>增加列的语法</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> 表名称 <span class="keyword">ADD</span> (</div><div class="line">列名称 类型 [<span class="keyword">DEFAULT</span> 默认值],</div><div class="line">列名称 类型 [<span class="keyword">DEFAULT</span> 默认值]...)</div></pre></td></tr></table></figure>
+<p>修改列名称的语法</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> 表名称 <span class="keyword">MODIFY</span> (</div><div class="line">列名称 类型 [<span class="keyword">DEFAULT</span> 默认值],</div><div class="line">列名称 类型 [<span class="keyword">DEFAULT</span> 默认值]...)</div></pre></td></tr></table></figure>
+<p>删除列的语法</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> 表名称 <span class="keyword">DROP</span> <span class="keyword">COLUMN</span> 列名称;</div></pre></td></tr></table></figure>
+<h2 id="约束的创建与管理"><a href="#约束的创建与管理" class="headerlink" title="约束的创建与管理"></a>约束的创建与管理</h2><p>约束是保存数据表数据完整性的一种方法，在SQL语法中约束有六种（非空约束、唯一约束、主键约束、检查约束、外键约束、数据类型）</p>
+<p>查看表的约束</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> USER_CONSTRAINTS;</div></pre></td></tr></table></figure>
+<p>查看列的约束</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> USER_CONS_COLUMNS;</div></pre></td></tr></table></figure>
+<h3 id="非空约束-NOT-NULL-NK"><a href="#非空约束-NOT-NULL-NK" class="headerlink" title="非空约束(NOT NULL,NK)"></a>非空约束(NOT NULL,NK)</h3><p>顾名思义，非空约束指的是数据表中的某一列内容不允许为空</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> 表名(</div><div class="line">列名 类型 <span class="keyword">NOT</span> <span class="literal">NULL</span>);</div></pre></td></tr></table></figure>
+<p>在对表插入数据时，如果这列为空，会出现错误，只有非空的数据才可以成功插入</p>
+<h3 id="唯一约束-UNIQUE-UK"><a href="#唯一约束-UNIQUE-UK" class="headerlink" title="唯一约束(UNIQUE,UK)"></a>唯一约束(UNIQUE,UK)</h3><p>不允许数据表中某一列的内容重复(空值重复不会受到唯一约束的限制)</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> 表名(</div><div class="line">列名 类型 <span class="keyword">UNIQUE</span>);</div></pre></td></tr></table></figure>
+<p>其实可以给约束命名，规则如下</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> 表名(</div><div class="line">列名 类型 </div><div class="line"><span class="keyword">CONSTRAINT</span> 约束名 <span class="keyword">UNIQUE</span>(列名));</div></pre></td></tr></table></figure>
+<h3 id="主键约束-PRIMARY-KEY-PK"><a href="#主键约束-PRIMARY-KEY-PK" class="headerlink" title="主键约束(PRIMARY KEY,PK)"></a>主键约束(PRIMARY KEY,PK)</h3><p>主键约束=非空约束+唯一约束，不能重复也不能为空</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> 表名(</div><div class="line">列名 类型 PRIMARY <span class="keyword">KEY</span>);</div><div class="line">或者</div><div class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> 表名(</div><div class="line">列名 类型 </div><div class="line"><span class="keyword">CONSTRAINT</span> 约束名 PRIMARY <span class="keyword">KEY</span>(列名));</div></pre></td></tr></table></figure>
+<p>复合主键</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> 表名(</div><div class="line">列名 类型 PRIMARY <span class="keyword">KEY</span>);</div><div class="line">或者</div><div class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> 表名(</div><div class="line">列名 类型 </div><div class="line"><span class="keyword">CONSTRAINT</span> 约束名 PRIMARY <span class="keyword">KEY</span>(列名,列名));</div></pre></td></tr></table></figure>
+<p>注：复合主键是在两列数据都重复的情况下才会报错</p>
+<h3 id="检查约束-CHECK-CK"><a href="#检查约束-CHECK-CK" class="headerlink" title="检查约束(CHECK,CK)"></a>检查约束(CHECK,CK)</h3><p>检查约束就是在数据更新前设置一些过滤条件，满足条件才能实现更新</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> 表名(</div><div class="line">列名 类型 </div><div class="line"><span class="keyword">CONSTRAINT</span> 约束名 <span class="keyword">CHECK</span>(条件，比如设置年龄在<span class="number">0</span><span class="number">-100</span>(age <span class="keyword">BETWEEN</span> <span class="number">0</span> <span class="keyword">AND</span> <span class="number">100</span>)));</div></pre></td></tr></table></figure>
+<p>在实际运用中不应该用太多检查约束，因为如果在数据表上设置了过多的检查约束，在数据更新的时候会影响性能，所有的数据检查最好由程序负责完成。</p>
+<h3 id="外键约束（FOREIGN-KEY-FK）"><a href="#外键约束（FOREIGN-KEY-FK）" class="headerlink" title="外键约束（FOREIGN KEY,FK）"></a>外键约束（FOREIGN KEY,FK）</h3><p>外键约束就是控制子表某一列内容与父表中这一列的数据范围匹配</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> 表名(</div><div class="line">列名 类型 </div><div class="line"><span class="keyword">CONSTRAINT</span> 约束名 FOREIGN <span class="keyword">KEY</span>(列名) <span class="keyword">REFERENCES</span> 父表名称(列名));</div></pre></td></tr></table></figure>
+<p>如果插入的数据在不属于父表的数据范围，就会出现违反完整约束条件，未找到父项关键字的错误。</p>
+<h4 id="外键约束的几个限制："><a href="#外键约束的几个限制：" class="headerlink" title="外键约束的几个限制："></a>外键约束的几个限制：</h4><p>限制一：如果表中存在外键关系，在删除父表前，一定要先删除子表</p>
+<p>如果两个表中互相存在对方的外键，这种时候只能强制删除</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">DROP</span> <span class="keyword">TABLE</span> 表名 <span class="keyword">CASCADE</span> <span class="keyword">CONSTRAINT</span>;</div></pre></td></tr></table></figure>
+<p>限制二：父表中被字表关联的外键字段，必须作为主键在父表中出现</p>
+<p>限制三：如果父表记录中有子表的记录，父表记录无法删除</p>
+<p>这种时候的解决方法就是先删除子表的记录再删除父表的记录，但是如果父表当中的外键字段被多个表关联，这样一个个去删除就比较麻烦，这就需要配置数据的级联操作。</p>
+<p>级联操作就是数据的级联删除（ON DELETE CASCADE)和级联更新（ON DELETE SET NULL）</p>
+<p>级联删除的语法如下</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> 表名(</div><div class="line">列名 类型 </div><div class="line"><span class="keyword">CONSTRAINT</span> 约束名 FOREIGN <span class="keyword">KEY</span>(列名) <span class="keyword">REFERENCES</span> 父表名称(列名) <span class="keyword">ON</span> <span class="keyword">DELETE</span> <span class="keyword">CASCADE</span>);</div></pre></td></tr></table></figure>
+<p>这样就可以删除父表的记录之后会自动删除子表的记录</p>
+<p>级联更新的语法如下</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> 表名(</div><div class="line">列名 类型 </div><div class="line"><span class="keyword">CONSTRAINT</span> 约束名 FOREIGN <span class="keyword">KEY</span>(列名) <span class="keyword">REFERENCES</span> 父表名称(列名) <span class="keyword">ON</span> <span class="keyword">DELETE</span> <span class="keyword">SET</span> <span class="literal">NULL</span>);</div></pre></td></tr></table></figure>
+<p>级联更新就是在级联删除的删除父表之后，对子表中父表被删除的记录变为NULL值，这种方法用在子表中其他记录还需要保存的情况下用到。</p>
+<h4 id="约束修改"><a href="#约束修改" class="headerlink" title="约束修改"></a>约束修改</h4><p>前提：如果要想修改约束要知道约束名称，所以在建立约束的时候，我们应该多用到下面这种方法增加而不是直接在列名后面加约束(除了非空约束)</p>
+<h5 id="增加约束"><a href="#增加约束" class="headerlink" title="增加约束"></a>增加约束</h5><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> 表名称 <span class="keyword">ADD</span> <span class="keyword">CONSTRAINT</span> 约束名 PRIMARY <span class="keyword">KEY</span>(列名);</div></pre></td></tr></table></figure>
+<h5 id="删除约束"><a href="#删除约束" class="headerlink" title="删除约束"></a>删除约束</h5><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> 表名称 <span class="keyword">DROP</span> <span class="keyword">CONSTRAINT</span> 约束名 ;</div></pre></td></tr></table></figure>
+<h2 id="序列"><a href="#序列" class="headerlink" title="序列"></a>序列</h2><p>序列的作用：实现自动增长列，序列有几个参数，步长，最大值，最小值，缓存，最后值</p>
+<p>last_number利用缓存个数乘以步长，使用缓存可能会出现跳号的出现</p>
+<p>创建序列的语句如下</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">CREATE</span> <span class="keyword">SEQUENCE</span> 序列名称</div><div class="line">[<span class="keyword">INCREMENT</span> <span class="keyword">BY</span> 步长] [STAR <span class="keyword">WITH</span> 开始值]</div><div class="line">[MAXVALUE 最大值 <span class="keyword">or</span> <span class="keyword">NOMAXVALUE</span>]</div><div class="line">[<span class="keyword">MINVALUE</span> 最小值 <span class="keyword">or</span> <span class="keyword">NOMINVALUE</span>]</div><div class="line">[<span class="keyword">CYCLE</span> <span class="keyword">or</span> <span class="keyword">NOCYCLE</span> 是否循环]</div><div class="line">[<span class="keyword">CACHE</span> 缓存数据 <span class="keyword">or</span> NOCACHE]</div></pre></td></tr></table></figure>
+<h2 id="同义词"><a href="#同义词" class="headerlink" title="同义词"></a>同义词</h2><p>dual表在所有用户都能调用，但是dual表示sys用户下的表，之所以能在其他用户调用，是因为增加了一个sys.dual的同义词dual，同义词的概念就是这样，也可以通过增加scott.emp的同义词myemp来实现在其他用户下select*from myemp 调用emp表</p>
+<p>创建同义词语法</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">CREATE</span> (<span class="keyword">public</span>) <span class="keyword">SYNONYM</span> myemp <span class="keyword">FOR</span> scott.emp</div></pre></td></tr></table></figure>
+<p>增加public是为了设置为公共同义词，任何用户都能调用</p>
+<h2 id="视图"><a href="#视图" class="headerlink" title="视图"></a>视图</h2><p>视图的功能就是用来存储复杂查询，在使用复杂查询时可以直接调用视图</p>
+<p>创建视图语法</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">CREATE</span> <span class="keyword">or</span> <span class="keyword">REPLACE</span> <span class="keyword">VIEW</span> 视图名称 <span class="keyword">AS</span> 子查询</div></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/07/17/有关Oracle表的一些操作/" rel="next" title="有关Oracle表的一些操作">
+                <i class="fa fa-chevron-left"></i> 有关Oracle表的一些操作
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/08/13/Oracle备份、行列转换以及分析函数/" rel="prev" title="Oracle备份、行列转换以及分析函数">
+                Oracle备份、行列转换以及分析函数 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/uploads/image/cat.png"
+               alt="dong" />
+          <p class="site-author-name" itemprop="name">dong</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#数据伪列"><span class="nav-number">1.</span> <span class="nav-text">数据伪列</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ROWNUM"><span class="nav-number">1.1.</span> <span class="nav-text">ROWNUM</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ROWID"><span class="nav-number">1.2.</span> <span class="nav-text">ROWID</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#表的创建与管理"><span class="nav-number">2.</span> <span class="nav-text">表的创建与管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#闪回（FLASH-BACK"><span class="nav-number">2.1.</span> <span class="nav-text">闪回（FLASH BACK)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#修改表结构"><span class="nav-number">2.2.</span> <span class="nav-text">修改表结构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#约束的创建与管理"><span class="nav-number">3.</span> <span class="nav-text">约束的创建与管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#非空约束-NOT-NULL-NK"><span class="nav-number">3.1.</span> <span class="nav-text">非空约束(NOT NULL,NK)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#唯一约束-UNIQUE-UK"><span class="nav-number">3.2.</span> <span class="nav-text">唯一约束(UNIQUE,UK)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#主键约束-PRIMARY-KEY-PK"><span class="nav-number">3.3.</span> <span class="nav-text">主键约束(PRIMARY KEY,PK)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#检查约束-CHECK-CK"><span class="nav-number">3.4.</span> <span class="nav-text">检查约束(CHECK,CK)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#外键约束（FOREIGN-KEY-FK）"><span class="nav-number">3.5.</span> <span class="nav-text">外键约束（FOREIGN KEY,FK）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#外键约束的几个限制："><span class="nav-number">3.5.1.</span> <span class="nav-text">外键约束的几个限制：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#约束修改"><span class="nav-number">3.5.2.</span> <span class="nav-text">约束修改</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#增加约束"><span class="nav-number">3.5.2.1.</span> <span class="nav-text">增加约束</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#删除约束"><span class="nav-number">3.5.2.2.</span> <span class="nav-text">删除约束</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#序列"><span class="nav-number">4.</span> <span class="nav-text">序列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#同义词"><span class="nav-number">5.</span> <span class="nav-text">同义词</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#视图"><span class="nav-number">6.</span> <span class="nav-text">视图</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">dong</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+
+  
+
+  
+
+</body>
+</html>

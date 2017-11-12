@@ -1,0 +1,705 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="数据库备份exp 为数据的导出 imp 为数据的导入 冷备份是指在停止数据库服务后，对几个文件拷贝好放到备份文件夹中，热备份比较麻烦，是在不停止数据库的服务下进行拷贝 第一范式 数据库的列不可拆分，比如cort为联系方式，但是联系方式可以分为电话，email，地址等等，所以不符合第一范式，可以在设计数据库的时候加多电话列，email列等等。 第二范式 多对多 第三范式 一对多 行列转换123456">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Oracle备份、行列转换以及分析函数">
+<meta property="og:url" content="https://donggn.github.io/2017/08/13/Oracle备份、行列转换以及分析函数/index.html">
+<meta property="og:site_name" content="dongg">
+<meta property="og:description" content="数据库备份exp 为数据的导出 imp 为数据的导入 冷备份是指在停止数据库服务后，对几个文件拷贝好放到备份文件夹中，热备份比较麻烦，是在不停止数据库的服务下进行拷贝 第一范式 数据库的列不可拆分，比如cort为联系方式，但是联系方式可以分为电话，email，地址等等，所以不符合第一范式，可以在设计数据库的时候加多电话列，email列等等。 第二范式 多对多 第三范式 一对多 行列转换123456">
+<meta property="og:updated_time" content="2017-11-12T15:30:11.451Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Oracle备份、行列转换以及分析函数">
+<meta name="twitter:description" content="数据库备份exp 为数据的导出 imp 为数据的导入 冷备份是指在停止数据库服务后，对几个文件拷贝好放到备份文件夹中，热备份比较麻烦，是在不停止数据库的服务下进行拷贝 第一范式 数据库的列不可拆分，比如cort为联系方式，但是联系方式可以分为电话，email，地址等等，所以不符合第一范式，可以在设计数据库的时候加多电话列，email列等等。 第二范式 多对多 第三范式 一对多 行列转换123456">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://donggn.github.io/2017/08/13/Oracle备份、行列转换以及分析函数/"/>
+
+
+
+
+
+  <title>Oracle备份、行列转换以及分析函数 | dongg</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">dongg</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://donggn.github.io/2017/08/13/Oracle备份、行列转换以及分析函数/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="dong">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/image/cat.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="dongg">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Oracle备份、行列转换以及分析函数</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-13T21:48:12+08:00">
+                2017-08-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="数据库备份"><a href="#数据库备份" class="headerlink" title="数据库备份"></a>数据库备份</h2><p>exp 为数据的导出</p>
+<p>imp 为数据的导入</p>
+<p>冷备份是指在停止数据库服务后，对几个文件拷贝好放到备份文件夹中，热备份比较麻烦，是在不停止数据库的服务下进行拷贝</p>
+<p>第一范式 数据库的列不可拆分，比如cort为联系方式，但是联系方式可以分为电话，email，地址等等，所以不符合第一范式，可以在设计数据库的时候加多电话列，email列等等。</p>
+<p>第二范式 多对多</p>
+<p>第三范式 一对多</p>
+<h2 id="行列转换"><a href="#行列转换" class="headerlink" title="行列转换"></a>行列转换</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">select</span> deptno,</div><div class="line"><span class="keyword">sum</span>(<span class="keyword">DECODE</span>(job,<span class="string">'PRESIDENT'</span>,sal,<span class="number">0</span>)) PRESIDENT_JOB</div><div class="line"><span class="keyword">sum</span>(<span class="keyword">DECODE</span>(job,<span class="string">'SALESMAN'</span>,sal,<span class="number">0</span>)) SALESMAN_JOB</div><div class="line">······</div><div class="line"><span class="keyword">FROM</span> EMP</div><div class="line"><span class="keyword">GROUP</span> <span class="keyword">BY</span> DEPTNO;</div></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">SELECT</span> temp.dno,<span class="keyword">sum</span>(PRESIDENT_JOB),<span class="keyword">sum</span>(SALESMAN_JOB)····</div><div class="line">(<span class="keyword">SELECT</span> DEPTNO dno,</div><div class="line">(<span class="keyword">SELECT</span> <span class="keyword">SUM</span>(sal) <span class="keyword">from</span> emp <span class="keyword">where</span> job=<span class="string">'PRESIDENT'</span> <span class="keyword">AND</span> empno=e.empno) PRESIDENT_JOB,</div><div class="line">(<span class="keyword">SELECT</span> <span class="keyword">SUM</span>(sal) <span class="keyword">from</span> emp <span class="keyword">where</span> job=<span class="string">'SALESMAN'</span> <span class="keyword">AND</span> empno=e.empno) SALESMAN_JOB</div><div class="line">···</div><div class="line"><span class="keyword">FROM</span> EMP E) temp</div><div class="line"><span class="keyword">group</span> <span class="keyword">by</span> temp.dno;</div></pre></td></tr></table></figure>
+<p>pivot 函数实习行列转换</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> (<span class="keyword">SELECT</span> DEPTNO,JOB,SAL <span class="keyword">FROM</span> EMP)</div><div class="line"><span class="keyword">PIVOT</span>(</div><div class="line">	<span class="keyword">SUM</span>(SAL)</div><div class="line">	<span class="keyword">FOR</span> JOB <span class="keyword">IN</span>(</div><div class="line">		<span class="string">'PRESIDENT'</span> <span class="keyword">AS</span> PRESIDENT_JOB,</div><div class="line">		<span class="string">'SALESMAN'</span> <span class="keyword">AS</span> SALESMAN_JOB,</div><div class="line">      	·······</div><div class="line">		)</div><div class="line">	)</div><div class="line"><span class="keyword">ORDER</span> <span class="keyword">BY</span> DEPTNO;</div></pre></td></tr></table></figure>
+<p>下面可以求出每个部门的最大值，最小值和求和</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> (</div><div class="line">  <span class="keyword">SELECT</span> DEPTNO,JOB,SAL,</div><div class="line">  	<span class="keyword">SUM</span>(SAL) <span class="keyword">OVER</span> (<span class="keyword">PARTITION</span> <span class="keyword">BY</span> DEPTNO) SUM_SAL,</div><div class="line">  	<span class="keyword">MAX</span>(SAL) <span class="keyword">OVER</span> (<span class="keyword">PARTITION</span> <span class="keyword">BY</span> DEPTNO) MAX_SAL,</div><div class="line">  	<span class="keyword">MIN</span>(SAL) <span class="keyword">OVER</span> (<span class="keyword">PARTITION</span> <span class="keyword">BY</span> DEPTNO) MIN_SAL</div><div class="line">  <span class="keyword">FROM</span> EMP)</div><div class="line">	<span class="keyword">PIVOT</span>(</div><div class="line">		<span class="keyword">SUM</span>(SAL)</div><div class="line">		<span class="keyword">FOR</span> JOB <span class="keyword">IN</span>(</div><div class="line">			<span class="string">'PRESIDENT'</span> <span class="keyword">AS</span> PRESIDENT_JOB,</div><div class="line">			<span class="string">'SALESMAN'</span> <span class="keyword">AS</span> SALESMAN_JOB</div><div class="line">			)</div><div class="line">		)</div><div class="line"><span class="keyword">ORDER</span> <span class="keyword">BY</span> DEPTNO;</div></pre></td></tr></table></figure>
+<p>下面对每个职位拆分</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> (</div><div class="line">  <span class="keyword">SELECT</span> DEPTNO,JOB,SAL</div><div class="line">  <span class="keyword">FROM</span> EMP)</div><div class="line">	<span class="keyword">PIVOT</span>(</div><div class="line">		<span class="keyword">SUM</span>(SAL)  SUM_SAL, <span class="keyword">MAX</span>(SAL) <span class="keyword">AS</span> MAX_SAL</div><div class="line">		<span class="keyword">FOR</span> JOB <span class="keyword">IN</span>(</div><div class="line">			<span class="string">'PRESIDENT'</span> <span class="keyword">AS</span> PRESIDENT_JOB,</div><div class="line">			<span class="string">'SALESMAN'</span> <span class="keyword">AS</span> SALESMAN_JOB</div><div class="line">			)</div><div class="line">		)</div><div class="line"><span class="keyword">ORDER</span> <span class="keyword">BY</span> DEPTNO;</div></pre></td></tr></table></figure>
+<h2 id="connect-by"><a href="#connect-by" class="headerlink" title="connect by"></a>connect by</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">SELECT</span> TO_CHAR(NEXT_DAY(TRUNC(<span class="keyword">TO_DATE</span>(&amp;DATE_END,<span class="string">'YYYYMMDD'</span>),<span class="string">'YY'</span>) + (<span class="keyword">LEVEL</span> - <span class="number">1</span>) * <span class="number">7</span>,<span class="number">2</span>),<span class="string">'YYYYMMDD'</span>) DAY_ID</div><div class="line"><span class="keyword">FROM</span> DUAL </div><div class="line"><span class="keyword">CONNECT</span> <span class="keyword">BY</span> NEXT_DAY</div><div class="line">(TRUNC(<span class="keyword">TO_DATE</span>(&amp;DATE_END,<span class="string">'YYYYMMDD'</span>),<span class="string">'YY'</span>) + (<span class="keyword">LEVEL</span> - <span class="number">1</span>) * <span class="number">7</span>,<span class="number">2</span>) </div><div class="line">&lt;= </div><div class="line"><span class="keyword">LAST_DAY</span>(ADD_MONTHS(TRUNC(<span class="keyword">TO_DATE</span>(&amp;DATE_END,<span class="string">'YYYYMMDD'</span>),<span class="string">'YY'</span>),<span class="number">11</span>))</div></pre></td></tr></table></figure>
+<p>connect by 按照最下面的规则找出符合所有规则的数</p>
+<p>在实际应用中，可能会出现业务需求要求表只显示排名前十的数据并且排序，十名之后的数据以其他显示并求和，这样的SQL比较麻烦，可以这样写</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line"><span class="comment">--临时表</span></div><div class="line">WITH TEMPORARY_TABLE AS</div><div class="line"> (<span class="keyword">SELECT</span> COLUMN1, COLUMN2, <span class="keyword">SUM</span>(A_N) A_N</div><div class="line">    <span class="keyword">FROM</span> (<span class="keyword">SELECT</span> <span class="keyword">CASE</span></div><div class="line">                   <span class="keyword">WHEN</span> <span class="keyword">ROWNUM</span> &gt; <span class="number">10</span> <span class="keyword">THEN</span></div><div class="line">                    <span class="string">'OTHER'</span></div><div class="line">                   <span class="keyword">ELSE</span></div><div class="line">                    COLUMN1</div><div class="line">                 <span class="keyword">END</span> COLUMN1,</div><div class="line">                 <span class="keyword">CASE</span></div><div class="line">                   <span class="keyword">WHEN</span> <span class="keyword">ROWNUM</span> &gt; <span class="number">10</span> <span class="keyword">THEN</span></div><div class="line">                    <span class="string">'其他'</span></div><div class="line">                   <span class="keyword">ELSE</span></div><div class="line">                    COLUMN2</div><div class="line">                 <span class="keyword">END</span> COLUMN2,</div><div class="line">                 A_N</div><div class="line">            <span class="keyword">FROM</span> (<span class="keyword">SELECT</span> COLUMN1, COLUMN2, <span class="keyword">COUNT</span>(<span class="number">1</span>) A_N</div><div class="line">                    <span class="keyword">FROM</span> <span class="keyword">TABLE</span></div><div class="line">                   <span class="keyword">GROUP</span> <span class="keyword">BY</span> COLUMN1, COLUMN2</div><div class="line">                   <span class="keyword">ORDER</span> <span class="keyword">BY</span> <span class="keyword">COUNT</span>(<span class="number">1</span>) <span class="keyword">DESC</span>))</div><div class="line">   <span class="keyword">GROUP</span> <span class="keyword">BY</span> COLUMN1, COLUMN2)</div><div class="line"></div><div class="line"><span class="keyword">SELECT</span> *</div><div class="line">  <span class="keyword">FROM</span> (<span class="keyword">SELECT</span> COLUMN1, COLUMN2, A_N</div><div class="line">          <span class="keyword">FROM</span> TEMPORARY_TABLE</div><div class="line">         <span class="keyword">WHERE</span> COLUMN1 != <span class="string">'OTHER'</span></div><div class="line">         <span class="keyword">ORDER</span> <span class="keyword">BY</span> A_N <span class="keyword">DESC</span>)</div><div class="line"><span class="keyword">UNION</span> ALL</div><div class="line"><span class="keyword">SELECT</span> COLUMN1, COLUMN2, A_N</div><div class="line">  <span class="keyword">FROM</span> TEMPORARY_TABLE</div><div class="line"> <span class="keyword">WHERE</span> COLUMN1 = <span class="string">'OTHER'</span></div></pre></td></tr></table></figure>
+<h2 id="分析函数"><a href="#分析函数" class="headerlink" title="分析函数"></a>分析函数</h2><p>OVER (PARTITION BY )  （分区操作）</p>
+<p>可以实现在没有Group By条件下在select后面加入统计函数</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">SELECT</span> deptno, job, sal ,</div><div class="line">	<span class="keyword">sum</span>(sal) <span class="keyword">OVER</span> (<span class="keyword">PARTITION</span> <span class="keyword">BY</span> deptno) <span class="keyword">SUM</span></div><div class="line"><span class="keyword">FROM</span> emp;</div></pre></td></tr></table></figure>
+<p>这里按部门分区计算每个部门的工资总和</p>
+<p>如果按如下运行</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">SELECT</span> deptno, job, sal ,</div><div class="line">	<span class="keyword">sum</span>(sal) <span class="keyword">OVER</span> () <span class="keyword">SUM</span></div><div class="line"><span class="keyword">FROM</span> emp;</div></pre></td></tr></table></figure>
+<p>这里就没有进行分区，会将一整个数据集作为一个区求和</p>
+<p>按多个字段分区</p>
+<p>SELECT deptno, job, sal ,</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">SELECT</span> deptno, job, sal ,</div><div class="line">	<span class="keyword">sum</span>(sal) <span class="keyword">OVER</span> (<span class="keyword">PARTITION</span> <span class="keyword">BY</span> deptno, job) <span class="keyword">SUM</span></div><div class="line"><span class="keyword">FROM</span> emp;</div></pre></td></tr></table></figure>
+<p>ORDER BY 子句</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">SELECT</span> deptno, job, sal ,</div><div class="line">	<span class="keyword">sum</span>(sal) <span class="keyword">OVER</span> (<span class="keyword">PARTITION</span> <span class="keyword">BY</span> deptno <span class="keyword">ORDER</span> <span class="keyword">BY</span> sal) <span class="keyword">SUM</span>,</div><div class="line">	<span class="keyword">rank</span>() <span class="keyword">OVER</span> (<span class="keyword">PARTITION</span> <span class="keyword">BY</span> deptno <span class="keyword">ORDER</span> <span class="keyword">BY</span> sal) <span class="keyword">rank</span></div><div class="line"><span class="keyword">FROM</span> emp;</div></pre></td></tr></table></figure>
+<p>这里的rank会返回一个排序的列，大小相等的数据会返回同一个排名，如果想返回不同的排名，可以改成DENSE_RANK()，如下</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">SELECT</span> deptno, job, sal ,</div><div class="line">	<span class="keyword">sum</span>(sal) <span class="keyword">OVER</span> (<span class="keyword">PARTITION</span> <span class="keyword">BY</span> deptno <span class="keyword">ORDER</span> <span class="keyword">BY</span> sal) <span class="keyword">SUM</span>,</div><div class="line">	<span class="keyword">dense_rank</span>() <span class="keyword">OVER</span> (<span class="keyword">PARTITION</span> <span class="keyword">BY</span> deptno <span class="keyword">ORDER</span> <span class="keyword">BY</span> sal) <span class="keyword">rank</span></div><div class="line"><span class="keyword">FROM</span> emp;</div></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/07/24/伪列、表的增删改以及约束、序列、同义词、视图/" rel="next" title="伪列、表的增删改以及约束、序列、同义词、视图">
+                <i class="fa fa-chevron-left"></i> 伪列、表的增删改以及约束、序列、同义词、视图
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/08/27/python-学习/" rel="prev" title="python 学习">
+                python 学习 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/uploads/image/cat.png"
+               alt="dong" />
+          <p class="site-author-name" itemprop="name">dong</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#数据库备份"><span class="nav-number">1.</span> <span class="nav-text">数据库备份</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#行列转换"><span class="nav-number">2.</span> <span class="nav-text">行列转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#connect-by"><span class="nav-number">3.</span> <span class="nav-text">connect by</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分析函数"><span class="nav-number">4.</span> <span class="nav-text">分析函数</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">dong</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+
+  
+
+  
+
+</body>
+</html>
